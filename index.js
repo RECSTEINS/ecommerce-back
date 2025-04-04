@@ -10,8 +10,8 @@ const app = express();
 const prisma = new PrismaClient();
 
 app.use(cors());
-app.use(express.json());
 app.use('/webhook', express.raw({ type: 'application/json' }));
+app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
@@ -185,8 +185,8 @@ app.post('/crear-pago', async (req, res) => {
             payment_method_types: ['card'],
             line_items,
             mode: 'payment',
-            success_url: 'http://localhost:3001/exito',
-            cancel_url: 'http://localhost:3001/cancelado',
+            success_url: 'http://localhost:3000/?pago=exitoso',       // ← tu página de inicio (frontend)
+            cancel_url: 'http://localhost:3000/carrito',
             billing_address_collection: 'auto',
             customer_creation: 'always'
         });
