@@ -11,6 +11,9 @@ const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
+app.use('/webhook', express.raw({ type: 'application/json' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -183,7 +186,9 @@ app.post('/crear-pago', async (req, res) => {
             line_items,
             mode: 'payment',
             success_url: 'http://localhost:3001/exito',
-            cancel_url: 'http://localhost:3001/cancelado'
+            cancel_url: 'http://localhost:3001/cancelado',
+            billing_address_collection: 'auto',
+            customer_creation: 'always'
         });
 
         res.json({ id: session.id });
@@ -191,6 +196,55 @@ app.post('/crear-pago', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+  
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+  
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+  
+        // 🚀 Enviar el correo cuando el pago se completó exitosamente
+        await enviarCorreo(
+          session.customer_email,
+          "¡Gracias por tu compra!",
+          `<h1>Gracias por tu pedido en E-Shop</h1>
+           <p>Tu pago fue procesado correctamente.</p>`
+        );
+      }
+  
+      res.status(200).send();
+    } catch (err) {
+      console.error("Webhook Error:", err.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  });
+
+//! Nodemailer
+const nodemailer = require('nodemailer');
+
+const enviarCorreo = async (to, asunto, cuerpoHtml) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: '202200440@upqroo.edu.mx',
+      pass: 'lvepwidrcjpzxaiq' 
+    }
+  });
+
+  await transporter.sendMail({
+    from: '"E-Shop" <202200440@upqroo.edu.mx>',
+    to,
+    subject: asunto,
+    html: cuerpoHtml
+  });
+};
 
 
 // --------------------- INICIO SERVIDOR ---------------------
