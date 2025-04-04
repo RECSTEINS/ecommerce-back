@@ -185,8 +185,8 @@ app.post('/crear-pago', async (req, res) => {
             payment_method_types: ['card'],
             line_items,
             mode: 'payment',
-            success_url: 'http://localhost:3000/?pago=exitoso',       // ← tu página de inicio (frontend)
-            cancel_url: 'http://localhost:3000/carrito',
+            success_url: 'https://ambar-bazar-studio.vercel.app/?pago=exitoso',       // ← tu página de inicio (frontend)
+            cancel_url: 'https://ambar-bazar-studio.vercel.app/carrito',
             billing_address_collection: 'auto',
             customer_creation: 'always'
         });
